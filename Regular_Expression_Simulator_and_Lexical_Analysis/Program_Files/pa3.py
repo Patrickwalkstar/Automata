@@ -26,13 +26,14 @@ class RegEx:
 		Also initializes the equivalent Abstract Syntax Tree (AST), as well as
 		the equivalent NFA and DFA. 
 		"""
-		regex_file = open(filename, 'r')
-		self.alphabet = regex_file.readline().rstrip()
-		self.operators = ('|', '*', 'concat')
-		self.tokenized_regex = self.preprocess(regex_file.readline().rstrip())
-		self.equivalent_ast = self.regexToAST()
-		self.equivalent_nfa = self.constructNFA()
-		self.equivalent_dfa = DFA(self.equivalent_nfa, self.alphabet)
+		
+		with open(filename) as regex_file:
+			self.alphabet = regex_file.readline().rstrip()
+			self.operators = ('|', '*', 'concat')
+			self.tokenized_regex = self.preprocess(regex_file.readline().rstrip())
+			self.equivalent_ast = self.regexToAST()
+			self.equivalent_nfa = self.constructNFA()
+			self.equivalent_dfa = DFA(self.equivalent_nfa, self.alphabet)
 		
 	def simulate(self, str):
 		"""
@@ -206,8 +207,7 @@ class RegEx:
 			
 		return nfa_stack.pop()
 
-		
-	def oneSymbolNFA(self, char):
+	def oneSymbolNFA(self, char: str):
 		"""
 		Contributor(s): Andres Rivera
 
@@ -259,7 +259,7 @@ class RegEx:
 		is closed under regular languages.
 		"""
 		num_states = 1 + nfa1.num_states + nfa2.num_states
-		
+
 		# Renumber nfa1's and nfa2's accept states and combine them 
 		accept_states = [1+state for state in nfa1.accept_states] + [1+state+nfa1.num_states for state in nfa2.accept_states]
 
@@ -267,21 +267,17 @@ class RegEx:
 
 		# Renumbering and saving nfa1's transitions
 		for (curr_state, symbol),set_states in nfa1.transitions.items():
-			renumbered_set = set()
-			for state in set_states:
-				renumbered_set.add(state+1)
+			renumbered_set = {state+1 for state in set_states}
 			transitions[(curr_state+1,symbol)] = renumbered_set
-		
+
 		# Renumbering and saving nfa2's transitions
 		for (curr_state, symbol),set_states in nfa2.transitions.items():
-			renumbered_set = set()
-			for state in set_states:
-				renumbered_set.add(1+state+nfa1.num_states)
+			renumbered_set = {1+state+nfa1.num_states for state in set_states}
 			transitions[(1+curr_state+nfa1.num_states, symbol)] = renumbered_set
-		
+
 		return NFA(num_states, self.alphabet, transitions, 1, accept_states)
 
-	def concatNFA(self,nfa1,nfa2):
+	def concatNFA(self,nfa1,nfa2):  # sourcery skip: set-comprehension
 		"""
 		Contributor(s): Andres Rivera, Patrick Walker
 		
@@ -352,20 +348,17 @@ class RegEx:
 
 		# Re-number the accept states of the NFA
 		nfa.accept_states = [accept_state + 1 for accept_state in nfa.accept_states] + [nfa.start_state]
-		
+
 		# Re-number the states in the transitions of the NFA
 		for (curr_state, symbol), destinations in nfa.transitions.items(): 
 			curr_state += 1
-			renumbered_set = set()
-			for state in destinations:
-				renumbered_set.add(state+1)
+			renumbered_set = {state+1 for state in destinations}
 			new_transitions[(curr_state,symbol)] = renumbered_set
-		
+
 		# Assign the newly-numbered transitions to be the NFAs transitions
 		nfa.transitions = new_transitions
-		
-		return nfa
 
+		return nfa
 
 class AST: 
 	""" Simulates an AST """
@@ -446,7 +439,6 @@ class NFA:
 		self.writeDFA(dfa_filename, dfa_construction)
 		
 	
-
 	def constructDFA(self):
 		"""
 		Contributor(s): Patrick, Andres
@@ -553,9 +545,9 @@ class NFA:
 		Returns a list of single numbered states.
 		"""
 		
-		for index in range(0, len(list_of_states)):
+		for index in range(len(list_of_states)):
 			list_of_states[index] = setStatesToNumber[list_of_states[index]]
-		
+
 		return list_of_states
 		
 	def getSetStatesToNumber(self, dfa_states=frozenset()):
@@ -566,12 +558,7 @@ class NFA:
 		Returns a dictionary of these mappings.
 		"""
 
-		setStatesToNumber = {}
-		count = 1
-		for state in dfa_states:
-			setStatesToNumber[state] = count
-			count += 1
-		return setStatesToNumber
+		return {state: count for count, state in enumerate(dfa_states, start=1)}
 
 	def writeDFA(self, dfa_filename, dfa_construction=tuple()):
 		"""
@@ -586,23 +573,20 @@ class NFA:
 										3, DFA accept states.
 		"""
 		
-		dfa_file = open(dfa_filename, 'w')
-		dfa_file.write(str(len(dfa_construction[0])) + "\n")
-		dfa_file.write(self.alphabet + "\n")
-	
-		for (sc, s) in dfa_construction[1].items():
-			dfa_file.write("%d \'%s\' %d\n" % (sc[0],sc[1],s))
-		
-		dfa_file.write(str(dfa_construction[2]) + "\n")
-		
-		dfa_accept_states = dfa_construction[3]
-		for index in range(0,len(dfa_accept_states)):
-			dfa_accept_states[index] = str(dfa_accept_states[index])
-		
-		dfa_file.write(" ".join(dfa_construction[3]))
+		with open(dfa_filename, 'w') as dfa_file:
+			dfa_file.write(str(len(dfa_construction[0])) + "\n")
+			dfa_file.write(self.alphabet + "\n")
 
-		dfa_file.close()
+			for (sc, s) in dfa_construction[1].items():
+				dfa_file.write("%d \'%s\' %d\n" % (sc[0],sc[1],s))
 
+			dfa_file.write(str(dfa_construction[2]) + "\n")
+
+			dfa_accept_states = dfa_construction[3]
+			for index in range(len(dfa_accept_states)):
+				dfa_accept_states[index] = str(dfa_accept_states[index])
+
+			dfa_file.write(" ".join(dfa_construction[3]))
 
 class DFA:
 	""" Simulates a DFA """
@@ -628,13 +612,10 @@ class DFA:
 		and False if not.
 		"""
 		current_state = self.start_state
-		
+
 		# For each read in symbol, use the transitions dictionary to transition from current_state to the next state
 		# Then, reassign current_state
 		for symbol in str:
 			current_state = self.transitions[(current_state, symbol)]
 
-		if current_state in (self.accept_states):
-				return True
-		else: 
-				return False
+		return current_state in (self.accept_states)

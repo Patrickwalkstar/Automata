@@ -20,32 +20,33 @@ class NFA:
 		of the nfa.)
 		"""
 		
-		nfa_file = open(nfa_filename, 'r')
-		self.num_states = int(nfa_file.readline())
-		self.alphabet = nfa_file.readline().rstrip('\n')
-		self.transitions = {}
-		self.start_state = ''
-		self.accept_states = []
+		with open(nfa_filename, 'r') as nfa_file:
 
-		# Defines transition for NFA: (state, symbol in alphabet or 'e') --> {destination states}
-		for line in nfa_file: 
-			token_list = line.rstrip('\n').split(" ")
-			
-			# Read lines as transitions until the read-in line is the start state
-			if len(token_list) > 1:
-				current_state  = int(token_list[0])
-				transition = token_list[1].strip("\'")
-				destination_state = int(token_list[2])
-				
-				if (current_state, transition) not in self.transitions.keys():
-					self.transitions[(current_state, transition)] = {destination_state}
+			self.num_states = int(nfa_file.readline())
+			self.alphabet = nfa_file.readline().rstrip('\n')
+			self.transitions = {}
+			self.start_state = ''
+			self.accept_states = []
+
+			# Defines transition for NFA: (state, symbol in alphabet or 'e') --> {destination states}
+			for line in nfa_file: 
+				token_list = line.rstrip('\n').split(" ")
+
+				# Read lines as transitions until the read-in line is the start state
+				if len(token_list) > 1:
+					current_state  = int(token_list[0])
+					transition = token_list[1].strip("\'")
+					destination_state = int(token_list[2])
+					
+					if (current_state, transition) not in self.transitions.keys():
+						self.transitions[(current_state, transition)] = {destination_state}
+					else: 
+						self.transitions[(current_state, transition)].add(destination_state)
 				else: 
-					self.transitions[(current_state, transition)].add(destination_state)
-			else: 
-				break
-		
-		self.start_state = int(nfa_file.readline().rstrip('\n')[0])
-		self.accept_states = nfa_file.readline().rstrip('\n').split(" ")
+					break
+			
+			self.start_state = int(nfa_file.readline().rstrip('\n')[0])
+			self.accept_states = nfa_file.readline().rstrip('\n').split(" ")
 
 		# Converts accept states from strings to ints (proper state format)
 		for index in range(0, len(self.accept_states)):
@@ -74,7 +75,6 @@ class NFA:
 		# Writes the constructed DFA to an external file based on the input filename
 		self.writeDFA(dfa_filename, dfa_construction)
 		
-	
 
 	def constructDFA(self):
 		"""
@@ -182,7 +182,7 @@ class NFA:
 		Returns a list of single numbered states.
 		"""
 		
-		for index in range(0, len(list_of_states)):
+		for index in range(len(list_of_states)):
 			list_of_states[index] = setStatesToNumber[list_of_states[index]]
 		
 		return list_of_states
@@ -195,12 +195,7 @@ class NFA:
 		Returns a dictionary of these mappings.
 		"""
 
-		setStatesToNumber = {}
-		count = 1
-		for state in dfa_states:
-			setStatesToNumber[state] = count
-			count += 1
-		return setStatesToNumber
+		return {state: count for count, state in enumerate(dfa_states, start=1)}
 
 	def writeDFA(self, dfa_filename, dfa_construction=tuple()):
 		"""
@@ -216,18 +211,20 @@ class NFA:
 		"""
 		
 		dfa_file = open(dfa_filename, 'w')
-		dfa_file.write(str(len(dfa_construction[0])) + "\n")
-		dfa_file.write(self.alphabet + "\n")
-	
-		for (sc, s) in dfa_construction[1].items():
-			dfa_file.write("%d \'%s\' %d\n" % (sc[0],sc[1],s))
-		
-		dfa_file.write(str(dfa_construction[2]) + "\n")
-		
-		dfa_accept_states = dfa_construction[3]
-		for index in range(0,len(dfa_accept_states)):
-			dfa_accept_states[index] = str(dfa_accept_states[index])
-		
-		dfa_file.write(" ".join(dfa_construction[3]))
+
+		with open(dfa_filename, 'w') as dfa_file:
+			dfa_file.write(str(len(dfa_construction[0])) + "\n")
+			dfa_file.write(self.alphabet + "\n")
+
+			for (sc, s) in dfa_construction[1].items():
+				dfa_file.write("%d \'%s\' %d\n" % (sc[0],sc[1],s))
+
+			dfa_file.write(str(dfa_construction[2]) + "\n")
+
+			dfa_accept_states = dfa_construction[3]
+			for index in range(len(dfa_accept_states)):
+				dfa_accept_states[index] = str(dfa_accept_states[index])
+			
+			dfa_file.write(" ".join(dfa_construction[3]))
 
 		dfa_file.close()
