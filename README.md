@@ -76,4 +76,6 @@ To test, execute the following command:
 
 This tests the program's RegEx Class on all of the test regular expressions in the files described above, and it reports the results in the terminal. 
 
+
 **NOTE:** _No modules/classes/libraries were used to complete the lexical analysis or parsing of the input strings, nor were they used for any of the other tasks that are part of the algorithms that were used in this programs implementation._
+
