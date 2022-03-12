@@ -366,6 +366,7 @@ class RegEx:
 		
 		return nfa
 
+
 class AST: 
 	""" Simulates an AST """
 
@@ -601,6 +602,7 @@ class NFA:
 		dfa_file.write(" ".join(dfa_construction[3]))
 
 		dfa_file.close()
+
 
 class DFA:
 	""" Simulates a DFA """
