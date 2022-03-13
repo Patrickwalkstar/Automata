@@ -1,6 +1,9 @@
 # Automata, Computability and Formal Languages
 Programs that explore the space of automata theory, the creaton and application of finite state machines and formal grammars. Though not present in these programs, studies included the topics of computability and Turing machines.
 
+## TO RUN: 
+1. Navigate to a directory containing a programs files and run the `test_*.py` file in the command line.
+2. Use `run.sh` to test any of the programs. You will be prompted to provide the name of the program to run.
 
 
 ## Program Descriptions
